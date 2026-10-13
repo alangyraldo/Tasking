@@ -1,0 +1,55 @@
+body {
+  min-height: 100vh;
+  font-family: "Poppins", system-ui, sans-serif;
+  background:
+    radial-gradient(circle at 80% 0%, rgba(72, 68, 68, 0.35), transparent 50%),
+    #0d0a10;
+}
+
+
+.btn-guardar {
+  color: #1a1020;
+  font-weight: 500;
+  border: 0;
+  background: linear-gradient(135deg, #d9b3ea, #b985d0);
+}
+
+.btn-guaradar:hover {
+  color: #1a1020;
+  background: linear-gradient(135deg, #e3c4f0, #c496da);
+}
+
+.btn-cancelar {
+  color: #e2efdc;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  
+}
+
+.btn-cancelar:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+
+}
+
+
+.columna {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+}
+
+.conteo {
+  margin-left: 6px;
+  padding: 1px 9px;
+  font-size: 0.75rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+
+.modal-content {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  backdrop-filter: blur(10px);
+}
