@@ -6,7 +6,7 @@ body {
     #0d0a10;
 }
 
-
+/* Botones */
 .btn-guardar {
   color: #1a1020;
   font-weight: 500;
@@ -14,7 +14,7 @@ body {
   background: linear-gradient(135deg, #d9b3ea, #b985d0);
 }
 
-.btn-guaradar:hover {
+.btn-guardar:hover {
   color: #1a1020;
   background: linear-gradient(135deg, #e3c4f0, #c496da);
 }
@@ -22,16 +22,14 @@ body {
 .btn-cancelar {
   color: #e2efdc;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  
 }
 
 .btn-cancelar:hover {
   color: #fff;
   background: rgba(255, 255, 255, 0.08);
-
 }
 
-
+/* Columnas del tablero */
 .columna {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -46,10 +44,39 @@ body {
   background: rgba(255, 255, 255, 0.1);
 }
 
-
+/* Modal */
 .modal-content {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 24px;
   backdrop-filter: blur(10px);
+}
+
+/* Tarjetas de tarea */
+.tarjeta-tarea {
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+}
+
+.tarjeta-tarea h3 {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.tarjeta-tarea p {
+  font-size: 0.8rem;
+  margin-bottom: 4px;
+}
+
+.btn-eliminar {
+  color: #f1a7a7;
+  border: 1px solid rgba(241, 167, 167, 0.4);
+  font-size: 0.75rem;
+}
+
+.btn-eliminar:hover {
+  color: #fff;
+  background: rgba(241, 167, 167, 0.2);
 }
