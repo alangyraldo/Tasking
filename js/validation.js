@@ -23,19 +23,19 @@ export function validateTaskForm() {// esta funcion devuelve true si esta ok y f
   const errors = [];//creamos la lista donde se van a guardar los mensjaaes
   
   // condicion de que no puedeo ir vacion y minimo de letras
-  if (nombre === "") errors.push("El nombre no puede estar en blanco.");
-  else if (nombre.length <= 8) errors.push("El nombre debe tener más de 8 caracteres.");
+  if (nombre === "") errors.push("el nombre no puede estar en blanco");
+  else if (nombre.length <= 3) errors.push("el nombre debe tener mas de 3 caracteres");
 
   
-  if (descripcion === "") errors.push("La descripción no puede estar en blanco.");
-  else if (descripcion.length <= 15) errors.push("La descripción debe tener más de 15 caracteres.");
+  if (descripcion === "") errors.push("la descripcion no puede estar en blanco");
+  else if (descripcion.length <= 5) errors.push("la descripcion debe tener mas de 5 caracteres");
 
-  if (asignadoA === "") errors.push("El campo 'Asignado a' no puede estar en blanco.");
-  else if (asignadoA.length <= 8) errors.push("El campo 'Asignado a' debe tener más de 8 caracteres.");
+  if (asignadoA === "") errors.push("el campo 'asignado a' no puede estar en blanco");
+  else if (asignadoA.length <= 3) errors.push("el campo 'asignado a' debe tener mas de 3 caracteres");
 
-  if (fecha === "") errors.push("Debes seleccionar una fecha de entrega.");
+  if (fecha === "") errors.push("debes seleccionar una fecha de entrega");
 
-  if (estado === "") errors.push("Debes seleccionar un estado.");
+  if (estado === "") errors.push("debes seleccionar un estado");
 
   if (errors.length > 0) {// es decir, si hay un error lo mustra y se devueklve false
     showErrors(errors);
