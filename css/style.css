@@ -138,7 +138,7 @@ body {
   --estado-hecho: #F7EFE7;
 }
 
-/* cada columna toma su color segun el data-estado que contiene */
+/* cada columna toma su color segun el data-estado que contiene , me ayude de la ia por que no pude solucionar el tema del color perdon */
 .columna:has([data-estado*="hacer" i])   { --color-estado: var(--estado-por-hacer); }
 .columna:has([data-estado*="proceso" i]) { --color-estado: var(--estado-en-proceso); }
 .columna:has([data-estado*="revisi" i])  { --color-estado: var(--estado-revision); }

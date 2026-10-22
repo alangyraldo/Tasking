@@ -24,7 +24,7 @@ export function validateTaskForm() {// esta funcion devuelve true si esta ok y f
   
   // condicion de que no puedeo ir vacion y minimo de letras
   if (nombre === "") errors.push("el nombre no puede estar en blanco");
-  else if (nombre.length <= 3) errors.push("el nombre debe tener mas de 3 caracteres");
+  else if (nombre.length <= 5) errors.push("el nombre debe tener mas de 5 caracteres");
 
   
   if (descripcion === "") errors.push("la descripcion no puede estar en blanco");
