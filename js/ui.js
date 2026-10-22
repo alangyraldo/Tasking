@@ -1,7 +1,8 @@
-export function createTaskCard(task, onDelete) {// se crea la tarjeta y se recibe la funcion que elimina al ejecutar 
+export function createTaskCard(task, onDelete, onEdit) {// se crea la tarjeta y se reciben la funcion que elimina y la que edita al ejecutar 
   const card = document.createElement("article");// creo el contenedor de la tarjeta 
   card.className = "tarjeta-tarea";// le ponemos la clase que se da en ccs
   card.dataset.id = task.id;// guardamos el id en el html como data-id
+  card.dataset.estado = task.estado;// guardamos el estado en el html para poder darle color segun el estado
 
   const title = document.createElement("h3");// para el tirtulo de la tarea
   title.textContent = task.nombre;// se una textconten para que no se pueda inyectar codigo 
@@ -21,19 +22,32 @@ export function createTaskCard(task, onDelete) {// se crea la tarjeta y se recib
   status.className = "badge text-bg-secondary mb-2";
   status.textContent = task.estado;
 
+  const editBtn = document.createElement("button");// el boton editar
+  editBtn.type = "button";// para que no envie nada
+  editBtn.className = "btn btn-editar btn-sm rounded-pill";
+  editBtn.textContent = "Editar";
+  editBtn.addEventListener("click", () => onEdit(task.id, card));// cuando se da click se llama a la funcion edit de main y se pasa el id
+
   const deleteBtn = document.createElement("button");// eel boton eliminar
   deleteBtn.type = "button";// para que actue como un botn de envio
-  deleteBtn.className = "btn btn-eliminar btn-sm rounded-pill d-block mt-2";
+  deleteBtn.className = "btn btn-eliminar btn-sm rounded-pill";
   deleteBtn.textContent = "Eliminar";
   deleteBtn.addEventListener("click", () => onDelete(task.id, card));// cuanod se da click se lla a la funcion delete de arriba y se pasa id 
 
-  card.append(title, status, desc, assignee, date, deleteBtn);// se meten los elemento sde la tarjeta n orden
+  // Los dos botones juntos, uno al lado del otro
+  const actions = document.createElement("div");// un contenedor para los dos botones
+  actions.className = "d-flex gap-2 mt-2";
+  actions.append(editBtn, deleteBtn);
+
+  card.append(title, status, desc, assignee, date, actions);// se meten los elemento sde la tarjeta n orden
   return card;// se devuelve la tarjeta terminada
 }
+
+
 
 export function updateCounts(taskManager) {// para actualizar los numero de las columnas 
   document.querySelectorAll(".conteo").forEach((badge) => {// se recorre elcada contador 
     badge.textContent = taskManager.getTasksWithStatus(badge.dataset.estado).length;
-    // cada contador tiene un estado, se pregunta cual es y se escribe el numero en el contador 
+    // cada contador tiene un estado, se pregunta cual es y se escribe el numero en el
     });
 }   

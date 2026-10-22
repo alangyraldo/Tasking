@@ -34,4 +34,14 @@ export class TaskManager {// se crea una clase que s eencarga de gestioanr tarea
     const task = this.tasks.find((t) => t.id === taskId);//de buenvo buscamos la tarea por id con find 
     if (task) task.asignadoA = assignee;// otro if para ver si existe cambiar sino pues no 
   }
+
+  etTask(taskId) {
+    return this.tasks.find((t) => t.id === taskId);
+  }
+
+  editTask(taskId, datos) {
+    const task = this.getTask(taskId);
+    if (task) Object.assign(task, datos); // reemplaza solo los campos que llegan
+    return task;
+  }
 }

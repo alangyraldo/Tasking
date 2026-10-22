@@ -1,38 +1,54 @@
+:root {
+  --c-900: #3E3239;
+  --c-700: #6B5560;
+  --c-500: #9E8189;
+  --c-300: #C7A9A3;
+  --c-200: #E8D2C4;
+  --c-100: #F7EFE7;
+
+  /* Crema para vidrio */
+  --vidrio-1: rgba(247, 239, 231, 0.05);
+  --vidrio-2: rgba(247, 239, 231, 0.08);
+  --vidrio-borde: rgba(232, 210, 196, 0.18);
+}
+
 body {
   min-height: 100vh;
   font-family: "Poppins", system-ui, sans-serif;
+  color: var(--c-100);
   background:
-    radial-gradient(circle at 80% 0%, rgba(72, 68, 68, 0.35), transparent 50%),
-    #0d0a10;
+    radial-gradient(circle at 80% 0%, rgba(158, 129, 137, 0.35), transparent 50%),
+    radial-gradient(circle at 0% 0%, rgba(232, 210, 196, 0.12), transparent 40%),
+    var(--c-900);
 }
 
-/* Botones */
+/* botones */
 .btn-guardar {
-  color: #1a1020;
+  color: var(--c-900);
   font-weight: 500;
   border: 0;
-  background: linear-gradient(135deg, #d9b3ea, #b985d0);
+  background: linear-gradient(135deg, var(--c-200), var(--c-300));
 }
 
 .btn-guardar:hover {
-  color: #1a1020;
-  background: linear-gradient(135deg, #e3c4f0, #c496da);
+  color: var(--c-900);
+  background: linear-gradient(135deg, var(--c-100), var(--c-200));
 }
 
 .btn-cancelar {
-  color: #e2efdc;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--c-200);
+  border: 1px solid var(--vidrio-borde);
 }
 
 .btn-cancelar:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.08);
+  color: var(--c-100);
+  background: rgba(247, 239, 231, 0.1);
 }
 
-/* Columnas del tablero */
+/* columnas del tablero */
 .columna {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--vidrio-1);
+  border: 1px solid var(--vidrio-borde);
   border-radius: 20px;
 }
 
@@ -41,22 +57,24 @@ body {
   padding: 1px 9px;
   font-size: 0.75rem;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
+  color: var(--c-100);
+  background: rgba(158, 129, 137, 0.45);
 }
 
-/* Modal */
+/*modal */
 .modal-content {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--c-100);
+  background: rgba(107, 85, 96, 0.45);
+  border: 1px solid var(--vidrio-borde);
   border-radius: 24px;
   backdrop-filter: blur(10px);
 }
 
-/* Tarjetas de tarea */
+/* tarjetas de tarea */
 .tarjeta-tarea {
   padding: 12px 14px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--vidrio-2);
+  border: 1px solid var(--vidrio-borde);
   border-radius: 14px;
 }
 
@@ -70,13 +88,69 @@ body {
   margin-bottom: 4px;
 }
 
+/* badge del estado creado en ui */
+.tarjeta-tarea .text-bg-secondary {
+  color: var(--c-900) !important;
+  background-color: var(--c-300) !important;
+}
+
 .btn-eliminar {
-  color: #f1a7a7;
-  border: 1px solid rgba(241, 167, 167, 0.4);
+  color: var(--c-300);
+  border: 1px solid rgba(199, 169, 163, 0.45);
   font-size: 0.75rem;
 }
 
 .btn-eliminar:hover {
-  color: #fff;
-  background: rgba(241, 167, 167, 0.2);
+  color: var(--c-100);
+  background: rgba(199, 169, 163, 0.2);
+}
+
+/* la zona de soltar necesita altura mínima */
+.lista-tareas {
+  min-height: 120px;
+}
+
+.tarjeta-tarea {
+  cursor: grab;
+}
+
+/* larjeta mientras la arrastro */
+.tarjeta-tarea.arrastrando {
+  opacity: 0.4;
+}
+
+/* columna resaltada cuando la tarjeta esta encima */
+.lista-tareas.sobre {
+  outline: 2px dashed rgba(199, 169, 163, 0.7);
+  outline-offset: 4px;
+  border-radius: 14px;
+}
+
+/* selector de estado dentro de la tarjeta */
+.selector-estado {
+  font-size: 0.75rem;
+}
+
+:root {
+  --estado-por-hacer: #9E8189;
+  --estado-en-proceso: #C7A9A3;
+  --estado-revision: #E8D2C4;
+  --estado-hecho: #F7EFE7;
+}
+
+/* cada columna toma su color segun el data-estado que contiene */
+.columna:has([data-estado*="hacer" i])   { --color-estado: var(--estado-por-hacer); }
+.columna:has([data-estado*="proceso" i]) { --color-estado: var(--estado-en-proceso); }
+.columna:has([data-estado*="revisi" i])  { --color-estado: var(--estado-revision); }
+.columna:has([data-estado*="hecho" i])   { --color-estado: var(--estado-hecho); }
+
+.columna {
+  border-top: 4px solid var(--color-estado, var(--c-300));
+  background: color-mix(in srgb, var(--color-estado, #fff) 10%, transparent);
+}
+
+/* Contador de cada columna */
+.columna .conteo {
+  background: var(--color-estado, var(--c-500));
+  color: var(--c-900);
 }
