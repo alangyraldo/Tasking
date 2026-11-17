@@ -22,25 +22,44 @@ export function createTaskCard(task, onDelete, onEdit) {// se crea la tarjeta y 
   status.className = "badge text-bg-secondary mb-2";
   status.textContent = task.estado;
 
-  const editBtn = document.createElement("button");// el boton editar
-  editBtn.type = "button";// para que no envie nada
+   const editBtn = document.createElement("button");// el boton editar
+  editBtn.type = "button";
   editBtn.className = "btn btn-editar btn-sm rounded-pill";
-  editBtn.textContent = "Editar";
-  editBtn.addEventListener("click", () => onEdit(task.id, card));// cuando se da click se llama a la funcion edit de main y se pasa el id
+  editBtn.title = "Editar";
+  editBtn.setAttribute("aria-label", "Editar");
+  editBtn.append(crearIcono("bi-pencil-square"));// icono de lapiz
+  editBtn.addEventListener("click", () => onEdit(task.id, card));
 
-  const deleteBtn = document.createElement("button");// eel boton eliminar
-  deleteBtn.type = "button";// para que actue como un botn de envio
+ const deleteBtn = document.createElement("button");// el boton eliminar
+  deleteBtn.type = "button";
   deleteBtn.className = "btn btn-eliminar btn-sm rounded-pill";
-  deleteBtn.textContent = "Eliminar";
-  deleteBtn.addEventListener("click", () => onDelete(task.id, card));// cuanod se da click se lla a la funcion delete de arriba y se pasa id 
+  deleteBtn.title = "Eliminar";
+  deleteBtn.setAttribute("aria-label", "Eliminar");
+  deleteBtn.append(crearIcono("bi-trash"));// icono de papelera
+  deleteBtn.addEventListener("click", () => onDelete(task.id, card));
+
+   const doneBtn = document.createElement("button");// el boton para marcar como hecha
+  doneBtn.type = "button";
+  doneBtn.className = "btn btn-completar btn-outline-success btn-sm rounded-pill";// btn-completar es la clase que busca el listener
+  doneBtn.title = "Marcar como hecha";// texto que sale al pasar el mouse
+  doneBtn.setAttribute("aria-label", "Marcar como hecha");// para lectores de pantalla
+  doneBtn.append(crearIcono("bi-check-lg"));// icono de check
 
   // Los dos botones juntos, uno al lado del otro
-  const actions = document.createElement("div");// un contenedor para los dos botones
-  actions.className = "d-flex gap-2 mt-2";
+    const actions = document.createElement("div");// un contenedor para los botones
+  actions.className = "d-flex flex-wrap gap-2 mt-2";
   actions.append(editBtn, deleteBtn);
+  if (task.estado !== "HECHO") actions.prepend(doneBtn);// si ya esta hecha no hace falta el boton
 
   card.append(title, status, desc, assignee, date, actions);// se meten los elemento sde la tarjeta n orden
   return card;// se devuelve la tarjeta terminada
+
+  // crea un icono de bootstrap icons para meterlo dentro de un boton
+function crearIcono(clase) {
+  const icono = document.createElement("i");
+  icono.className = `bi ${clase}`;
+  return icono;
+}
 }
 
 

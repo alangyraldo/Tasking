@@ -35,7 +35,7 @@ export class TaskManager {// se crea una clase que s eencarga de gestioanr tarea
     if (task) task.asignadoA = assignee;// otro if para ver si existe cambiar sino pues no 
   }
 
-  etTask(taskId) {
+  getTask(taskId) {// busca una tarea por su id y la devuelve
     return this.tasks.find((t) => t.id === taskId);
   }
 
