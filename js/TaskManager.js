@@ -52,9 +52,14 @@ export class TaskManager {// se crea una clase que s eencarga de gestioanr tarea
   }
 
   cargar() {// recupera lo guardado y lo deja en this.tasks y this.currentId
-    const savedTasks = localStorage.getItem("tasks");// pedimos el texto guardado, si no hay nada devuelve null
-    if (savedTasks !== null) this.tasks = JSON.parse(savedTasks);// solo se parsea si existe porque JSON.parse(null) lanza error, y se convierte el texto de vuelta a arreglo
-
+  const savedTasks = localStorage.getItem("tasks");// pedimos el texto guardado, si no hay nada devuelve null
+  if (savedTasks !== null) {// solo se parsea si existe
+    try {
+      this.tasks = JSON.parse(savedTasks);// convierte el texto de vuelta a arreglo
+    } catch {
+      this.tasks = [];// si el texto está dañado, se empieza con una lista vacía en vez de romper la app
+    }
+  }
     const savedId = localStorage.getItem("currentId");// pedimos el contador guardado
     if (savedId !== null) this.currentId = Number(savedId);// localStorage lo devuelve como string, asi que se pasa a numero para que el ++ de addTask funcione bien
   }

@@ -34,7 +34,7 @@ function abrirModal({ tarea = null, estado = "" } = {}) {// si llega una tarea e
     document.getElementById("fechaEntrega").value = tarea.fechaDeEntrega;
     document.getElementById("estado").value = tarea.estado;
     if (titulo) titulo.textContent = "Editar tarea";// se cambian los textos para que se note que es editar
-    if (botonGuardar) botonGuardar.textContent = "Guardar cambios";
+    if (botonGuardar) botonGuardar.textContent = "Actualizar";
   } else {// si no hay tarea es una nueva
     editingId = null;// no hay ninguna en edicion
     document.getElementById("estado").value = estado;// se deja el estado de la columna donde se dio click
@@ -116,11 +116,12 @@ form.addEventListener("submit", (event) => {// un envento para guarar tarea
   bootstrap.Modal.getOrCreateInstance(modalEl).hide();// se cierra el modal usando bs
 });
 
-
-modalEl.addEventListener("hidden.bs.modal", () => {// limpia los errores cada vez que se cierra el modal para poder abrirlo de nuevo 
+modalEl.addEventListener("hidden.bs.modal", () => {// limpia los errores cada vez que se cierra el modal para poder abrirlo de nuevo
   clearErrors();
   form.reset();
   editingId = null;// se olvida la tarea en edicion por si cerraron el modal sin guardar
+  modalEl.querySelector(".modal-title").textContent = "Nueva tarea";
+  modalEl.querySelector('[type="submit"]').textContent = "Guardar";
 });
 
 
@@ -155,3 +156,27 @@ taskContainer.addEventListener("click", (event) => {
        renderTasks(); // vuelvo a dibujar todo
   }
 });
+
+document.querySelectorAll(".columna").forEach((columna) => { // recorre cada columna del tablero
+  const estado = columna.querySelector(".lista-tareas").dataset.estado; // saca el estado de esa columna desde su lista
+
+  columna.addEventListener("dragover", (event) => { // se ejecuta mientras una tarjeta pasa por encima de la columna
+    event.preventDefault(); // sin esto el navegador no deja soltar la tarjeta aqui
+    columna.classList.add("sobre"); // resalta la columna para mostrar donde caeria la tarjeta
+  });
+
+  columna.addEventListener("dragleave", (event) => { // se ejecuta cuando la tarjeta sale de la columna
+    if (!columna.contains(event.relatedTarget)) columna.classList.remove("sobre"); // solo quita el resaltado si salio de verdad y no si paso a un elemento hijo
+  }); 
+
+  columna.addEventListener("drop", (event) => { // se ejecuta cuando sueltas la tarjeta sobre la columna
+    event.preventDefault(); // evita que el navegador haga su accion por defecto con lo que se suelta
+    columna.classList.remove("sobre"); // quita el resaltado
+    const taskId = Number(event.dataTransfer.getData("text/plain")); // lee el id guardado al empezar a arrastrar y lo pasa a numero
+    const task = taskManager.getTask(taskId); // busca la tarea en el arreglo
+    if (!task || task.estado === estado) return; // si no existe o la soltaste en su misma columna no hace nada
+    taskManager.updateTask(taskId, estado); // cambia el estado de la tarea en el arreglo
+    taskManager.guardar(); // guarda en localstorage para que el cambio no se pierda al recargar
+    renderTasks(); // vuelve a dibujar todo para que la tarjeta aparezca en su nueva columna y se actualicen los contadores
+  }); 
+}); 
