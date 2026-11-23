@@ -44,4 +44,19 @@ export class TaskManager {// se crea una clase que s eencarga de gestioanr tarea
     if (task) Object.assign(task, datos); // reemplaza solo los campos que llegan
     return task;
   }
+
+  
+  guardar() {// guarda las tareas y el contador en el navegador
+    localStorage.setItem("tasks", JSON.stringify(this.tasks));// localStorage solo guarda strings, por eso el arreglo se pasa a texto con JSON.stringify
+    localStorage.setItem("currentId", String(this.currentId));// el contador tambien se guarda para que las tareas nuevas sigan la numeracion despues de recargar
+  }
+
+  cargar() {// recupera lo guardado y lo deja en this.tasks y this.currentId
+    const savedTasks = localStorage.getItem("tasks");// pedimos el texto guardado, si no hay nada devuelve null
+    if (savedTasks !== null) this.tasks = JSON.parse(savedTasks);// solo se parsea si existe porque JSON.parse(null) lanza error, y se convierte el texto de vuelta a arreglo
+
+    const savedId = localStorage.getItem("currentId");// pedimos el contador guardado
+    if (savedId !== null) this.currentId = Number(savedId);// localStorage lo devuelve como string, asi que se pasa a numero para que el ++ de addTask funcione bien
+  }
 }
+
