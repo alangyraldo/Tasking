@@ -95,8 +95,8 @@ export function removeTaskFromList(taskId) { // quita la tarjeta de la pantalla 
   if (card) card.remove(); // si la encontro la saca del html y si no existe no hace nada
 } 
 
-export function updateCounts(taskManager) { // actualiza los numeros que aparecen al lado del titulo de cada columna
+export function updateCounts(taskManager, projectId) { // actualiza los numeros de las columnas y ahora cuenta solo las del proyecto abierto
   document.querySelectorAll(".conteo").forEach((badge) => { // recorre cada contador de la pantalla
-    badge.textContent = taskManager.getTasksWithStatus(badge.dataset.estado).length; // cuenta las tareas de ese estado y escribe el numero
+    badge.textContent = taskManager.getTasksWithStatus(badge.dataset.estado, projectId).length; // cuenta las tareas de ese estado y proyecto
   }); 
 } 

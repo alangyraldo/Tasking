@@ -9,10 +9,17 @@ export class TaskManager {// se crea una clase que s eencarga de gestioanr tarea
     return this.tasks;
   }
 
-  getTasksWithStatus(status) {// para verificar el estatus 
-    return this.tasks.filter((t) => t.estado === status);// filtro que recorre el array y me quedo con las tareas que coinsidan
+ getTasksWithStatus(status, projectId) { // filtra por estado y ahora tambien por proyecto si llega uno
+    return this.tasks.filter((t) => t.estado === status && (projectId === undefined || t.proyectoId === projectId)); // si no llega proyecto cuenta todas como antes y asi las pruebas no se rompen
+  } 
+
+  getTasksByProject(projectId) { // devuelve solo las tareas de un proyecto
+    return this.tasks.filter((t) => t.proyectoId === projectId); // se queda con las que tienen ese proyectoId
   }
 
+  deleteTasksByProject(projectId) { // borra todas las tareas de un proyecto cuando se elimina el proyecto
+    this.tasks = this.tasks.filter((t) => t.proyectoId !== projectId); // se queda con las de los demas proyectos
+  } 
   addTask(task) {// para agregar una nueva tareaa a la lista 
     this.currentId++;// genero un aumento en el contador para que cada tareas sea diferente id
     const newTask = { id: this.currentId, ...task }; // creo la tarea final y arrastro todo lo que piden
