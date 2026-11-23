@@ -1,11 +1,13 @@
 import { TaskManager } from "./TaskManager.js";
 import { validateTaskForm, clearErrors } from "./validation.js";
 import { createTaskCard, updateCounts } from "./ui.js";
+import { ProjectManager } from "./ProjectManager.js"; // el import va con los demas al inicio del archivo
 
 const taskManager = new TaskManager();// se crea un solo manager 
 taskManager.cargar();// se cargan las tareas guardadas antes de dibujar, si se dibuja primero la pantalla queda vacia
-renderTasks();// se dibujan las tarjetas con lo que se cargo, funciona aqui arriba porque renderTasks es una function y JS las sube al inicio (hoisting)
-
+const projectManager = new ProjectManager(); // se crea un solo manager de proyectos
+projectManager.cargar(); // se cargan los proyectos guardados
+let currentProjectId = null; // id del proyecto abierto y si es null se esta en la vista de inicio
 const form = document.getElementById("task-form");//gurdamos formuladio para usarlo despues 
 const modalEl = document.getElementById("modalTarea");// segun entiendo el modal tambien 
 
@@ -15,7 +17,7 @@ function handleDelete(taskId, card) {// se hace cunado se presiona el eliminar
   taskManager.deleteTask(taskId); // fuera del array
   taskManager.guardar();// se guarda para que la tarea eliminada no vuelva al refrescar
   card.remove();// fuera de la pantlla
-  updateCounts(taskManager);//se actualiza las columnas  
+  updateCounts(taskManager, currentProjectId);//se actualiza las columnas  
 }
 
 // abre el mismo modal para crear o para editar
@@ -73,7 +75,7 @@ function moveTask(taskId, newStatus, card) {
     .querySelector(`.lista-tareas[data-estado="${newStatus}"]`)
     .append(card);
   // 4. Actualizo los contadores.
-  updateCounts(taskManager);
+  updateCounts(taskManager, currentProjectId);
 }
 
 form.addEventListener("submit", (event) => {// un envento para guarar tarea 
@@ -87,6 +89,7 @@ form.addEventListener("submit", (event) => {// un envento para guarar tarea
     asignadoA: document.getElementById("asignadoA").value.trim(),
     fechaDeEntrega: document.getElementById("fechaEntrega").value,
     estado: document.getElementById("estado").value,
+    proyectoId: currentProjectId, // la tarea queda ligada al proyecto abierto
   };
 
   if (editingId !== null) {// si hay un id es que estamos editando
@@ -111,7 +114,7 @@ form.addEventListener("submit", (event) => {// un envento para guarar tarea
   }
 
   taskManager.guardar();// se guarda despues de crear o editar, y como esta fuera del if/else sirve para los dos casos
-  updateCounts(taskManager);// se acrualizan los contadores
+  updateCounts(taskManager, currentProjectId);// se acrualizan los contadores
   form.reset();// se resetea el formulario para un proximo uso 
   bootstrap.Modal.getOrCreateInstance(modalEl).hide();// se cierra el modal usando bs
 });
@@ -125,35 +128,35 @@ modalEl.addEventListener("hidden.bs.modal", () => {// limpia los errores cada ve
 });
 
 
-function renderTasks() {// vuelve a dibujar todas las tarjetas a partir del arreglo
-    document.querySelectorAll(".lista-tareas").forEach((lista) => {// limpio cada columna para no duplicar tarjetas
+function renderTasks() { // vuelve a dibujar todas las tarjetas a partir del arreglo
+  document.querySelectorAll(".lista-tareas").forEach((lista) => { // limpio cada columna para no duplicar tarjetas
     lista.innerHTML = "";
   });
 
-  
-  taskManager.getAllTasks().forEach((task) => {//  recorro todas las tareas
-    const card = createTaskCard(task, handleDelete, handleEdit); // creo la tarjeta de cada tarea
-    document// la agrego a la columna que le toca segun su estado
-      .querySelector(`.lista-tareas[data-estado="${task.estado}"]`)
-      .append(card);
-  });
+  if (currentProjectId !== null) { // solo se dibuja si hay un proyecto abierto
+    taskManager.getTasksByProject(currentProjectId).forEach((task) => { // recorre solo las tareas del proyecto abierto
+      const card = createTaskCard(task, handleDelete, handleEdit); // crea la tarjeta de cada tarea
+      document
+        .querySelector(`.lista-tareas[data-estado="${task.estado}"]`)
+        .append(card); // la mete en la columna de su estado
+    });
+  }
 
-  
-  updateCounts(taskManager);// actualizo los contadores
+  updateCounts(taskManager, currentProjectId); // actualizo los contadores
 }
 
 
 const taskContainer = document.getElementById("task-container");// un solo listener para todo el tablero (delegacion de eventos)
 
 taskContainer.addEventListener("click", (event) => {
-    const doneBtn = event.target.closest(".btn-completar");// closes sube por el DOM hasta encontrar el boton, asi funciona aunque el clic caiga en el icono de adentro
-    if (doneBtn) {// solo me interesa si el clic fue en el boton de completar
-        const taskElement = doneBtn.closest(".tarjeta-tarea");// subo por el DOM hasta la tarjeta que contiene el boton
-        const taskId = Number(taskElement.dataset.id);// el data-id llega como string asi que lo paso a number
-        const task = taskManager.getTask(taskId);// busco la tarea en el arreglo
-        if (task) task.estado = "HECHO";// cambio el estado al valor de completada
+  const doneBtn = event.target.closest(".btn-completar");// closes sube por el DOM hasta encontrar el boton, asi funciona aunque el clic caiga en el icono de adentro
+  if (doneBtn) {// solo me interesa si el clic fue en el boton de completar
+    const taskElement = doneBtn.closest(".tarjeta-tarea");// subo por el DOM hasta la tarjeta que contiene el boton
+    const taskId = Number(taskElement.dataset.id);// el data-id llega como string asi que lo paso a number
+    const task = taskManager.getTask(taskId);// busco la tarea en el arreglo
+    if (task) task.estado = "HECHO";// cambio el estado al valor de completada
     taskManager.guardar();// se guarda el nuevo estado, sin esto al refrescar vuelve a su columna anterior
-       renderTasks(); // vuelvo a dibujar todo
+    renderTasks(); // vuelvo a dibujar todo
   }
 });
 
@@ -180,3 +183,128 @@ document.querySelectorAll(".columna").forEach((columna) => { // recorre cada col
     renderTasks(); // vuelve a dibujar todo para que la tarjeta aparezca en su nueva columna y se actualicen los contadores
   }); 
 }); 
+
+const modalProyecto = document.getElementById("modalProyecto"); // el modal de crear proyecto
+
+function renderProyectos() { // dibuja la barra lateral y las tarjetas de la vista de inicio
+  const lista = document.getElementById("lista-proyectos"); // la lista de la barra lateral
+  const grid = document.getElementById("grid-proyectos"); // el contenedor de tarjetas de la vista de inicio
+  lista.innerHTML = ""; // limpia para no duplicar
+  grid.innerHTML = ""; // limpia para no duplicar
+
+  projectManager.getAllProjects().forEach((p) => { // recorre cada proyecto
+    const btn = document.createElement("button"); // boton de la barra lateral
+    btn.type = "button"; // no envia nada
+    btn.className = "item-proyecto" + (p.id === currentProjectId ? " activo" : ""); // marca el que esta abierto
+    btn.textContent = p.nombre; // textContent evita inyectar codigo
+    btn.addEventListener("click", () => abrirProyecto(p.id)); // al hacer click abre ese proyecto
+    const li = document.createElement("li"); // elemento de la lista
+    li.append(btn); // mete el boton
+    lista.append(li); // lo agrega a la barra
+
+    const col = document.createElement("div"); // columna de la tarjeta grande
+    col.className = "col-md-6 col-lg-4"; // tamano responsive de bootstrap
+    const tarjeta = document.createElement("article"); // tarjeta del proyecto
+    tarjeta.className = "tarjeta-proyecto"; // clase para el estilo
+    const nombre = document.createElement("h3"); // nombre del proyecto
+    nombre.className = "tarea-titulo"; // reutiliza el estilo del titulo
+    nombre.textContent = p.nombre; // pone el nombre
+    const desc = document.createElement("p"); // descripcion
+    desc.className = "tarea-desc"; // reutiliza el estilo de descripcion
+    desc.textContent = p.descripcion || "Sin descripción"; // si no hay descripcion muestra un texto por defecto
+    const total = document.createElement("span"); // contador de tareas
+    total.className = "text-body-secondary small"; // texto pequeno y gris
+    const cantidad = taskManager.getTasksByProject(p.id).length; // cuantas tareas tiene el proyecto
+    total.textContent = `${cantidad} ${cantidad === 1 ? "tarea" : "tareas"}`; // singular si es solo una
+    const del = document.createElement("button"); // boton eliminar proyecto
+    del.type = "button"; // no envia nada
+    del.className = "btn btn-eliminar btn-sm rounded-pill"; // mismo estilo que el de tareas
+    del.title = "Eliminar proyecto"; // texto al pasar el mouse
+    del.innerHTML = '<i class="bi bi-trash"></i>'; // icono de papelera
+    del.addEventListener("click", (e) => { e.stopPropagation(); eliminarProyecto(p.id); }); // stopPropagation evita que tambien se abra el proyecto
+    const pie = document.createElement("div"); // pie de la tarjeta
+    pie.className = "d-flex justify-content-between align-items-center"; // total a la izquierda y boton a la derecha
+    pie.append(total, del); // los mete en el pie
+    tarjeta.append(nombre, desc, pie); // arma la tarjeta
+    tarjeta.addEventListener("click", () => abrirProyecto(p.id)); // click en la tarjeta abre el proyecto
+    col.append(tarjeta); // la mete en la columna
+    grid.append(col); // la agrega a la vista de inicio
+  }); 
+}
+
+function abrirProyecto(projectId) { // muestra el tablero de un proyecto
+  currentProjectId = projectId; // guarda cual esta abierto
+  const p = projectManager.getProject(projectId); // busca sus datos
+  document.getElementById("titulo-proyecto").textContent = p.nombre; // pone el nombre arriba del tablero
+  document.getElementById("desc-proyecto").textContent = p.descripcion; // pone la descripcion
+  document.getElementById("vista-inicio").classList.add("d-none"); // oculta la vista de inicio
+  document.getElementById("vista-tablero").classList.remove("d-none"); // muestra el tablero
+  renderTasks(); // dibuja solo las tareas de este proyecto
+  renderProyectos(); // actualiza cual aparece marcado en la barra
+} 
+
+function mostrarInicio() { // vuelve a la vista principal
+  currentProjectId = null; // ya no hay proyecto abierto
+  document.getElementById("vista-tablero").classList.add("d-none"); // oculta el tablero
+  document.getElementById("vista-inicio").classList.remove("d-none"); // muestra el inicio
+  renderProyectos(); // redibuja para actualizar los totales
+} 
+
+let proyectoAEliminar = null; // id del proyecto que se va a eliminar si el usuario confirma
+const modalConfirmar = document.getElementById("modalConfirmar"); // el modal de confirmacion
+
+function eliminarProyecto(projectId) { // ahora solo abre el modal de confirmacion
+  const p = projectManager.getProject(projectId); // busca el proyecto para mostrar su nombre
+  proyectoAEliminar = projectId; // recuerda cual se quiere eliminar
+  document.getElementById("confirmar-texto").textContent = `Se eliminará "${p.nombre}" con todas sus tareas. Esta acción no se puede deshacer.`; // textContent evita inyectar codigo
+  bootstrap.Modal.getOrCreateInstance(modalConfirmar).show(); // abre el modal
+}
+
+document.getElementById("btn-confirmar-eliminar").addEventListener("click", () => { // cuando confirma
+  if (proyectoAEliminar === null) return; // si no hay proyecto elegido no hace nada
+  taskManager.deleteTasksByProject(proyectoAEliminar); // borra sus tareas
+  taskManager.guardar(); // guarda el cambio
+  projectManager.deleteProject(proyectoAEliminar); // borra el proyecto
+  projectManager.guardar(); // guarda el cambio
+  proyectoAEliminar = null; // ya no hay nada pendiente
+  document.activeElement.blur(); // quita el foco para evitar el aviso de aria-hidden
+  bootstrap.Modal.getOrCreateInstance(modalConfirmar).hide(); // cierra el modal
+  mostrarInicio(); // redibuja la vista principal
+});
+
+modalConfirmar.addEventListener("hidden.bs.modal", () => { // si cierran el modal sin confirmar
+  proyectoAEliminar = null; // se olvida el proyecto elegido
+});
+
+document.getElementById("btn-volver").addEventListener("click", mostrarInicio); // el boton volver lleva al inicio
+
+document.getElementById("project-form").addEventListener("submit", (event) => { // al crear un proyecto
+  event.preventDefault(); // evita que la pagina se recargue
+  const nombre = document.getElementById("proyecto-nombre").value.trim(); // lee el nombre sin espacios sobrantes
+  const descripcion = document.getElementById("proyecto-descripcion").value.trim(); // lee la descripcion opcional
+  const error = document.getElementById("proyecto-error"); // caja de errores
+  if (nombre.length < 3) { // valida el minimo de caracteres
+    error.textContent = "el nombre debe tener minimo 3 caracteres"; // mensaje de error
+    error.classList.remove("d-none"); // lo muestra
+    return; // se sale sin crear nada
+  } 
+  const project = projectManager.addProject({ nombre, descripcion }); // crea el proyecto
+  projectManager.guardar(); // lo guarda en localstorage
+  event.target.reset(); // deja el formulario vacio
+  error.classList.add("d-none"); // oculta el error
+  document.activeElement.blur(); // quita el foco para evitar el aviso de aria-hidden
+  bootstrap.Modal.getOrCreateInstance(modalProyecto).hide(); // cierra el modal
+  abrirProyecto(project.id); // abre el proyecto recien creado
+}); 
+
+function iniciar() { // se ejecuta al cargar la pagina
+  if (projectManager.getAllProjects().length === 0 && taskManager.getAllTasks().length > 0) { // si hay tareas viejas y ningun proyecto
+    const p = projectManager.addProject({ nombre: "Mi primer proyecto" }); // crea un proyecto para guardarlas
+    taskManager.getAllTasks().forEach((t) => { t.proyectoId = p.id; }); // le asigna ese proyecto a cada tarea vieja
+    projectManager.guardar(); // guarda el proyecto
+    taskManager.guardar(); // guarda las tareas actualizadas
+  } 
+  mostrarInicio(); // arranca en la vista principal
+} 
+
+iniciar(); // llama a iniciar cuando ya existe todo lo anterior

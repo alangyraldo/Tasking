@@ -4,98 +4,105 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tasking | Planificador de tareas</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✅</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✅</text></svg>">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-  <main class="container-xl py-4">
+  <div class="d-flex layout">
 
-    <header class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-      <div>
-        <h1 class="h3 fw-medium mb-0">Tasking</h1>
-        <p class="text-body-secondary mb-0">Planificador de tareas</p>
-      </div>
-      <button type="button" class="btn btn-cancelar rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#modalTarea">
-        + Nueva tarea
-      </button>
-    </header>
-  
-  
-  
-    <!-- tblero tipo trello -->
-    <section class="row g-3" aria-label="Tablero de tareas" id="task-container">
+    <aside class="sidebar p-3"> <!-- barra lateral con los proyectos -->
+      <h2 class="h6 fw-medium mb-3">Proyectos</h2>
+      <button type="button" class="btn btn-guardar rounded-pill w-100 mb-3" data-bs-toggle="modal" data-bs-target="#modalProyecto">+ Nuevo proyecto</button>
+      <ul id="lista-proyectos" class="list-unstyled d-grid gap-1 mb-0"></ul>
+    </aside>
 
-      <div class="col-md-6 col-lg-3">
-        <div class="columna p-3 h-100">
-          <h2 class="h6 fw-medium mb-3">Por hacer <span class="conteo" data-estado="POR HACER">0</span></h2>
-          <div class="lista-tareas d-grid gap-2" data-estado="POR HACER"></div>
-        </div>
-      </div>
+    <main class="container-xl py-4 flex-grow-1">
 
-      <div class="col-md-6 col-lg-3">
-        <div class="columna p-3 h-100">
-          <h2 class="h6 fw-medium mb-3">En proceso <span class="conteo" data-estado="EN PROCESO">0</span></h2>
-          <div class="lista-tareas d-grid gap-2" data-estado="EN PROCESO"></div>
-        </div>
-      </div>
+      <section id="vista-inicio"> <!-- vista principal -->
+        <h1 class="h3 fw-medium mb-1">Tasking</h1>
+        <p class="text-body-secondary mb-4">Elige un proyecto o crea uno nuevo</p>
+        <div id="grid-proyectos" class="row g-3"></div>
+      </section>
 
-      <div class="col-md-6 col-lg-3">
-        <div class="columna p-3 h-100">
-          <h2 class="h6 fw-medium mb-3">Revisión <span class="conteo" data-estado="REVISIÓN">0</span></h2>
-          <div class="lista-tareas d-grid gap-2" data-estado="REVISIÓN"></div>
-        </div>
-      </div>
+      <section id="vista-tablero" class="d-none"> <!-- vista del tablero de un proyecto -->
+        <header class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+          <div>
+            <button type="button" id="btn-volver" class="btn btn-cancelar btn-sm rounded-pill mb-2">← Proyectos</button>
+            <h1 class="h3 fw-medium mb-0" id="titulo-proyecto">Proyecto</h1>
+            <p class="text-body-secondary mb-0" id="desc-proyecto"></p>
+          </div>
+          <button type="button" class="btn btn-cancelar rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#modalTarea">+ Nueva tarea</button>
+        </header>
 
-      <div class="col-md-6 col-lg-3">
-        <div class="columna p-3 h-100">
-          <h2 class="h6 fw-medium mb-3">Hecho <span class="conteo" data-estado="HECHO">0</span></h2>
-          <div class="lista-tareas d-grid gap-2" data-estado="HECHO"></div>
-        </div>
-      </div>
+        <section id="task-container" class="row g-3"> <!-- tablero con las 4 columnas -->
 
-    </section>
-  </main>
+          <div class="col-12 col-md-6 col-xl-3">
+            <article class="columna">
+              <h2 class="h6 fw-medium mb-3 d-flex align-items-center">Por hacer <span class="badge rounded-pill conteo" data-estado="POR HACER">0</span></h2>
+              <div class="lista-tareas d-grid gap-2" data-estado="POR HACER"></div>
+            </article>
+          </div>
 
-  <div class="modal fade" id="modalTarea" tabindex="-1" aria-labelledby="tituloModal" aria-hidden="true">
+          <div class="col-12 col-md-6 col-xl-3">
+            <article class="columna">
+              <h2 class="h6 fw-medium mb-3 d-flex align-items-center">En proceso <span class="badge rounded-pill conteo" data-estado="EN PROCESO">0</span></h2>
+              <div class="lista-tareas d-grid gap-2" data-estado="EN PROCESO"></div>
+            </article>
+          </div>
+
+          <div class="col-12 col-md-6 col-xl-3">
+            <article class="columna">
+              <h2 class="h6 fw-medium mb-3 d-flex align-items-center">Revisión <span class="badge rounded-pill conteo" data-estado="REVISIÓN">0</span></h2>
+              <div class="lista-tareas d-grid gap-2" data-estado="REVISIÓN"></div>
+            </article>
+          </div>
+
+          <div class="col-12 col-md-6 col-xl-3">
+            <article class="columna">
+              <h2 class="h6 fw-medium mb-3 d-flex align-items-center">Hecho <span class="badge rounded-pill conteo" data-estado="HECHO">0</span></h2>
+              <div class="lista-tareas d-grid gap-2" data-estado="HECHO"></div>
+            </article>
+          </div>
+
+        </section>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- modal de tarea -->
+  <div class="modal fade" id="modalTarea" tabindex="-1" aria-labelledby="tituloModalTarea" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <form class="modal-content" id="task-form" novalidate>
-
         <div class="modal-header border-0">
-          <h2 class="modal-title h5 fw-medium" id="tituloModal">Nueva tarea</h2>
+          <h2 class="modal-title h5 fw-medium" id="tituloModalTarea">Nueva tarea</h2>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
         </div>
-
         <div class="modal-body">
-
           <div id="form-errors" class="alert alert-danger d-none" role="alert"></div>
-
           <div class="mb-3">
             <label for="nombre" class="form-label">Nombre</label>
-            <input type="text" class="form-control" id="nombre" name="nombre" placeholder="minimo 5 caracteres">
+            <input type="text" class="form-control" id="nombre">
           </div>
-
           <div class="mb-3">
             <label for="descripcion" class="form-label">Descripción</label>
-            <textarea class="form-control" id="descripcion" name="descripcion" rows="3" placeholder="minimo 5 caracteres"></textarea>
+            <textarea class="form-control" id="descripcion" rows="3"></textarea>
           </div>
-
           <div class="mb-3">
             <label for="asignadoA" class="form-label">Asignado a</label>
-            <input type="text" class="form-control" id="asignadoA" name="asignadoA" placeholder="minimo 3 caracteres">
+            <input type="text" class="form-control" id="asignadoA">
           </div>
-
           <div class="mb-3">
             <label for="fechaEntrega" class="form-label">Fecha de entrega</label>
-            <input type="date" class="form-control" id="fechaEntrega" name="fechaEntrega">
+            <input type="date" class="form-control" id="fechaEntrega">
           </div>
-
           <div>
             <label for="estado" class="form-label">Estado</label>
-            <select class="form-select" id="estado" name="estado">
+            <select class="form-select" id="estado">
               <option value="">Selecciona un estado</option>
               <option value="POR HACER">Por hacer</option>
               <option value="EN PROCESO">En proceso</option>
@@ -104,13 +111,55 @@
             </select>
           </div>
         </div>
-
         <div class="modal-footer border-0">
           <button type="button" class="btn btn-cancelar rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-guardar rounded-pill px-4">Guardar tarea</button>
+          <button type="submit" class="btn btn-guardar rounded-pill px-4">Guardar</button>
         </div>
-
       </form>
+    </div>
+  </div>
+
+  <!-- modal para crear proyecto -->
+  <div class="modal fade" id="modalProyecto" tabindex="-1" aria-labelledby="tituloModalProyecto" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <form class="modal-content" id="project-form" novalidate>
+        <div class="modal-header border-0">
+          <h2 class="modal-title h5 fw-medium" id="tituloModalProyecto">Nuevo proyecto</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <div id="proyecto-error" class="alert alert-danger d-none" role="alert"></div>
+          <div class="mb-3">
+            <label for="proyecto-nombre" class="form-label">Nombre</label>
+            <input type="text" class="form-control" id="proyecto-nombre" placeholder="minimo 3 caracteres">
+          </div>
+          <div>
+            <label for="proyecto-descripcion" class="form-label">Descripción (opcional)</label>
+            <textarea class="form-control" id="proyecto-descripcion" rows="3"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-cancelar rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-guardar rounded-pill px-4">Crear proyecto</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- modal para confirmar la eliminacion de un proyecto -->
+  <div class="modal fade" id="modalConfirmar" tabindex="-1" aria-labelledby="tituloModalConfirmar" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm-confirm">
+      <div class="modal-content">
+        <div class="modal-body text-center p-4">
+          <div class="icono-confirmar mb-3"><i class="bi bi-trash3"></i></div>
+          <h2 class="h5 fw-medium mb-2" id="tituloModalConfirmar">¿Eliminar proyecto?</h2>
+          <p class="text-body-secondary mb-4" id="confirmar-texto"></p>
+          <div class="d-flex justify-content-center gap-2">
+            <button type="button" class="btn btn-cancelar rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-peligro rounded-pill px-4" id="btn-confirmar-eliminar">Eliminar</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
