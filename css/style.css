@@ -154,3 +154,115 @@ body {
   background: var(--color-estado, var(--c-500));
   color: var(--c-900);
 }
+.tarjeta-tarea {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+  transition: border-color 0.15s;
+}
+
+.tarjeta-tarea:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.tarjeta-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+.tarjeta-ref {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+/* color del icono segun la columna, paleta de github */
+.estado-icono { color: #8b949e; }
+.tarjeta-tarea[data-estado="EN PROCESO"] .estado-icono { color: #d29922; }
+.tarjeta-tarea[data-estado="REVISIÓN"] .estado-icono { color: #a371f7; }
+.tarjeta-tarea[data-estado="HECHO"] .estado-icono { color: #3fb950; }
+
+.tarjeta-tarea h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0.35rem 0 0.25rem;
+}
+
+.tarjeta-desc {
+  margin: 0 0 0.6rem;
+  font-size: 0.8rem;
+  opacity: 0.65;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;/* maximo 2 lineas */
+  line-clamp: 2;/* version estandar, es la que pide el editor */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* el menu solo se ve al pasar el mouse, como en github */
+.btn-menu {
+  color: inherit;
+  border: 0;
+  padding: 0 0.35rem;
+  opacity: 0;
+}
+.tarjeta-tarea:hover .btn-menu,
+.btn-menu:focus-visible,
+.btn-menu.show {
+  opacity: 1;
+}
+.btn-menu:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+@media (hover: none) {/* en celular no existe hover, asi que siempre visible */
+  .btn-menu { opacity: 1; }
+}
+
+.tarjeta-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tarjeta-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.1rem 0.5rem 0.1rem 0.2rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  font-size: 0.75rem;
+}
+
+.avatar {
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.tarjeta-footer .btn-completar {
+  width: 1.9rem;
+  height: 1.9rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
