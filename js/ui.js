@@ -100,3 +100,16 @@ export function updateCounts(taskManager, projectId) { // actualiza los numeros 
     badge.textContent = taskManager.getTasksWithStatus(badge.dataset.estado, projectId).length; // cuenta las tareas de ese estado y proyecto
   }); 
 } 
+
+
+
+export function mostrarAlerta(mensajes) { // muestra un error flotante arriba de la pantalla, sirve cuando el fallo no es del formulario
+  const lista = Array.isArray(mensajes) ? mensajes : [mensajes]; // acepto un texto o un arreglo y lo dejo siempre como arreglo
+  const alerta = document.createElement("div"); // creo el contenedor de la alerta
+  alerta.className = "alert alert-danger shadow position-fixed top-0 start-50 translate-middle-x mt-3"; // clases de bootstrap: roja, con sombra, fija arriba y centrada
+  alerta.style.zIndex = "2000"; // los modales de bootstrap usan 1055, con esto la alerta queda por encima
+  alerta.setAttribute("role", "alert"); // le avisa a los lectores de pantalla que es una alerta
+  alerta.textContent = lista.join(". "); // textContent y no innerHTML para que no se pueda inyectar codigo
+  document.body.append(alerta); // la agrego a la pagina
+  setTimeout(() => alerta.remove(), 5000); // a los 5 segundos se quita sola
+}

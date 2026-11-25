@@ -1,74 +1,58 @@
+import { obtenerTareas, crearTarea, actualizarTarea, eliminarTarea } from "./api.js"; // traigo las 4 funciones que hablan con el backend
 
-export class TaskManager {// se crea una clase que s eencarga de gestioanr tareas 
-  constructor() {// se crea el cosntructor y se jecuta una vez
-    this.tasks = [];// creo un array donde guardo las tareas
-    this.currentId = 0; // solo sube asi los ids nunca se repiten
+export class TaskManager { // sigue siendo la clase que gestiona las tareas, pero ahora la verdad esta en la base de datos
+  constructor() { // se ejecuta una vez al crear el manager
+    this.tasks = []; // copia local de las tareas, sirve para dibujar sin pedirlas al servidor cada vez
+  } // ya no hay currentId porque ahora mysql genera los ids con auto_increment
+
+  getAllTasks() { // devuelve el arreglo con las tareas
+    return this.tasks; // la copia local
   }
 
-  getAllTasks() {// devuelvo el arreglo con las tareas
-    return this.tasks;
+  getTasksWithStatus(status, projectId) { // filtra por estado y tambien por proyecto si llega uno
+    return this.tasks.filter((t) => t.estado === status && (projectId === undefined || t.proyectoId === projectId)); // si no llega proyecto cuenta todas como antes
   }
-
- getTasksWithStatus(status, projectId) { // filtra por estado y ahora tambien por proyecto si llega uno
-    return this.tasks.filter((t) => t.estado === status && (projectId === undefined || t.proyectoId === projectId)); // si no llega proyecto cuenta todas como antes y asi las pruebas no se rompen
-  } 
 
   getTasksByProject(projectId) { // devuelve solo las tareas de un proyecto
     return this.tasks.filter((t) => t.proyectoId === projectId); // se queda con las que tienen ese proyectoId
   }
 
-  deleteTasksByProject(projectId) { // borra todas las tareas de un proyecto cuando se elimina el proyecto
-    this.tasks = this.tasks.filter((t) => t.proyectoId !== projectId); // se queda con las de los demas proyectos
-  } 
-  addTask(task) {// para agregar una nueva tareaa a la lista 
-    this.currentId++;// genero un aumento en el contador para que cada tareas sea diferente id
-    const newTask = { id: this.currentId, ...task }; // creo la tarea final y arrastro todo lo que piden
-    this.tasks.push(newTask); // lo agregamos al final de la fika
-    return newTask;// me muesta el idpar poder usarla despues 
+  getTask(taskId) { // busca una tarea por su id en la copia local
+    return this.tasks.find((t) => t.id === taskId); // find devuelve la que coincida o undefined
   }
 
-  deleteTask(taskId) {// para eliminar la tarea dela lista 
-    this.tasks = this.tasks.filter((t) => t.id !== taskId);//me quedo con las tareas menos con el id que elegi
+  async cargar() { //  trae todas las tareas desde la base de dato
+    this.tasks = await obtenerTareas(); // GET /api/tasks y espero la respuesta antes de seguir
   }
 
-  updateTask(taskId, status) {// par cambiar el estado de una tarea 
-    const task = this.tasks.find((t) => t.id === taskId);// busco la tarea por id 
-    // con find me devuelve la que coincida 
-    if (task) task.estado = status;// una condicional si la encuentro me cambia el estdo sino pues no
+  async addTask(task) { // crea una tarea nueva en el servidor
+    const creada = await crearTarea(task); // POST, el servidor responde con la tarea ya con su id real
+    this.tasks.push(creada); // solo la agrego a la copia local si el servidor la acepto
+    return creada; // devuelvo la tarea para poder dibujar su tarjeta
   }
 
-  assignTask(taskId, assignee) {//para cambiar la asignacion de una tarea
-    const task = this.tasks.find((t) => t.id === taskId);//de buenvo buscamos la tarea por id con find 
-    if (task) task.asignadoA = assignee;// otro if para ver si existe cambiar sino pues no 
+  async editTask(taskId, datos) { // actualiza una tarea en el servidor y luego en la copia local
+    const actual = this.getTask(taskId); // busco la tarea completa porque el PUT del backend pide todos los campos
+    const guardada = await actualizarTarea(taskId, { ...actual, ...datos }); // mezclo lo viejo con lo nuevo y lo envio
+    this.tasks = this.tasks.map((t) => (t.id === taskId ? guardada : t)); // reemplazo la version vieja por la que devolvio el servidor
+    return guardada; // devuelvo la tarea ya guardada para dibujar la tarjeta
   }
 
-  getTask(taskId) {// busca una tarea por su id y la devuelve
-    return this.tasks.find((t) => t.id === taskId);
+  updateTask(taskId, status) { // cambia solo el estado, por ejemplo al marcar como hecha o al arrastrar
+    return this.editTask(taskId, { estado: status }); // reutilizo editTask para no repetir la logica del PUT
   }
 
-  editTask(taskId, datos) {
-    const task = this.getTask(taskId);
-    if (task) Object.assign(task, datos); // reemplaza solo los campos que llegan
-    return task;
+  assignTask(taskId, assignee) { // cambia la persona asignada
+    return this.editTask(taskId, { asignadoA: assignee }); // mismo PUT, cambiando solo ese campo
   }
 
-  
-  guardar() {// guarda las tareas y el contador en el navegador
-    localStorage.setItem("tasks", JSON.stringify(this.tasks));// localStorage solo guarda strings, por eso el arreglo se pasa a texto con JSON.stringify
-    localStorage.setItem("currentId", String(this.currentId));// el contador tambien se guarda para que las tareas nuevas sigan la numeracion despues de recargar
+  async deleteTask(taskId) { // elimina una tarea en el servidor
+    await eliminarTarea(taskId); // DELETE, si el servidor falla lanza un error y no sigue
+    this.tasks = this.tasks.filter((t) => t.id !== taskId); // solo la saco de la copia local si el servidor la borro
   }
 
-  cargar() {// recupera lo guardado y lo deja en this.tasks y this.currentId
-  const savedTasks = localStorage.getItem("tasks");// pedimos el texto guardado, si no hay nada devuelve null
-  if (savedTasks !== null) {// solo se parsea si existe
-    try {
-      this.tasks = JSON.parse(savedTasks);// convierte el texto de vuelta a arreglo
-    } catch {
-      this.tasks = [];// si el texto está dañado, se empieza con una lista vacía en vez de romper la app
-    }
-  }
-    const savedId = localStorage.getItem("currentId");// pedimos el contador guardado
-    if (savedId !== null) this.currentId = Number(savedId);// localStorage lo devuelve como string, asi que se pasa a numero para que el ++ de addTask funcione bien
+  async deleteTasksByProject(projectId) { // borra todas las tareas de un proyecto cuando se elimina el proyecto
+    const ids = this.getTasksByProject(projectId).map((t) => t.id); // saco solo los ids de las tareas de ese proyecto
+    await Promise.all(ids.map((id) => this.deleteTask(id))); // lanzo todos los DELETE a la vez y espero a que terminen
   }
 }
-

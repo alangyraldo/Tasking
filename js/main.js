@@ -1,89 +1,77 @@
-import { TaskManager } from "./TaskManager.js";
-import { validateTaskForm, clearErrors } from "./validation.js";
-import { createTaskCard, updateCounts } from "./ui.js";
-import { ProjectManager } from "./ProjectManager.js"; // el import va con los demas al inicio del archivo
+import { TaskManager } from "./TaskManager.js"; // el manager de tareas, ahora habla con el backend
+import { validateTaskForm, clearErrors, showErrors } from "./validation.js"; // showErrors ahora esta exportada para mostrar los errores 400 del servidor
+import { createTaskCard, updateCounts, mostrarAlerta } from "./ui.js"; // mostrarAlerta es para los errores fuera del formulario
+import { ProjectManager } from "./ProjectManager.js"; // los proyectos antes estaban con ls ara s ehablan directamente con el bakend y la bsd
 
-const taskManager = new TaskManager();// se crea un solo manager 
-taskManager.cargar();// se cargan las tareas guardadas antes de dibujar, si se dibuja primero la pantalla queda vacia
+const taskManager = new TaskManager(); // se crea un solo manager
+// aqui ya no se llama a taskManager.cargar(): ahora es asincrona y se llama dentro de iniciar()
 const projectManager = new ProjectManager(); // se crea un solo manager de proyectos
-projectManager.cargar(); // se cargan los proyectos guardados
+//projectManager.cargar(); // se cargan los proyectos guardados
 let currentProjectId = null; // id del proyecto abierto y si es null se esta en la vista de inicio
-const form = document.getElementById("task-form");//gurdamos formuladio para usarlo despues 
-const modalEl = document.getElementById("modalTarea");// segun entiendo el modal tambien 
+const form = document.getElementById("task-form"); // guardamos el formulario para usarlo despues
+const modalEl = document.getElementById("modalTarea"); // el modal de crear o editar tarea
 
-let editingId = null;// guarda el id de la tarea que se esta editando y si es null es que se esta creando una nueva
+let editingId = null; // id de la tarea que se esta editando y si es null se esta creando una nueva
 
-function handleDelete(taskId, card) {// se hace cunado se presiona el eliminar 
-  taskManager.deleteTask(taskId); // fuera del array
-  taskManager.guardar();// se guarda para que la tarea eliminada no vuelva al refrescar
-  card.remove();// fuera de la pantlla
-  updateCounts(taskManager, currentProjectId);//se actualiza las columnas  
+async function handleDelete(taskId, card) { // se hace cuando se presiona eliminar, ahora es async porque espera al servidor
+  try { // try porque el servidor puede estar apagado o la tarea puede ya no existir
+    await taskManager.deleteTask(taskId); // primero se borra en la base de datos
+    card.remove(); // la tarjeta solo sale de la pantalla si el servidor confirmo
+    updateCounts(taskManager, currentProjectId); // se actualizan los contadores
+  } catch (error) { // si algo fallo
+    mostrarAlerta(error.mensajes ?? [error.message]); // muestro los mensajes del servidor o el texto del error
+  }
 }
 
 // abre el mismo modal para crear o para editar
-function abrirModal({ tarea = null, estado = "" } = {}) {// si llega una tarea es editar y si no es crear
-  clearErrors();// se borran los errores que hayan quedado de antes
-  form.reset();// se deja el formulario vacio
+function abrirModal({ tarea = null, estado = "" } = {}) { // si llega una tarea es editar y si no es crear
+  clearErrors(); // se borran los errores que hayan quedado de antes
+  form.reset(); // se deja el formulario vacio
 
-  const titulo = modalEl.querySelector(".modal-title");// el titulo del modal para cambiarlo
-  const botonGuardar = modalEl.querySelector('[type="submit"]');// el boton guardar para cambiarle el texto
+  const titulo = modalEl.querySelector(".modal-title"); // el titulo del modal para cambiarlo
+  const botonGuardar = modalEl.querySelector('[type="submit"]'); // el boton guardar para cambiarle el texto
 
-  if (tarea) {// si hay tarea estamos editando
-    editingId = tarea.id;// guardamos cual es para usarlo al enviar
-    document.getElementById("nombre").value = tarea.nombre;// se llenan los campos con los datos de la tarea
+  if (tarea) { // si hay tarea estamos editando
+    editingId = tarea.id; // guardamos cual es para usarlo al enviar
+    document.getElementById("nombre").value = tarea.nombre; // se llenan los campos con los datos de la tarea
     document.getElementById("descripcion").value = tarea.descripcion;
     document.getElementById("asignadoA").value = tarea.asignadoA;
     document.getElementById("fechaEntrega").value = tarea.fechaDeEntrega;
     document.getElementById("estado").value = tarea.estado;
-    if (titulo) titulo.textContent = "Editar tarea";// se cambian los textos para que se note que es editar
+    if (titulo) titulo.textContent = "Editar tarea"; // se cambian los textos para que se note que es editar
     if (botonGuardar) botonGuardar.textContent = "Actualizar";
-  } else {// si no hay tarea es una nueva
-    editingId = null;// no hay ninguna en edicion
-    document.getElementById("estado").value = estado;// se deja el estado de la columna donde se dio click
+  } else { // si no hay tarea es una nueva
+    editingId = null; // no hay ninguna en edicion
+    document.getElementById("estado").value = estado; // se deja el estado de la columna donde se dio click
     if (titulo) titulo.textContent = "Nueva tarea";
     if (botonGuardar) botonGuardar.textContent = "Guardar";
   }
 
-  bootstrap.Modal.getOrCreateInstance(modalEl).show();// se abre el modal usando bs
+  bootstrap.Modal.getOrCreateInstance(modalEl).show(); // se abre el modal usando bootstrap
 }
 
-function handleEdit(taskId) {// se hace cuando se presiona el editar
-  abrirModal({ tarea: taskManager.getTask(taskId) });// buscamos la tarea por id y abrimos el modal con sus datos
+function handleEdit(taskId) { // se hace cuando se presiona editar
+  abrirModal({ tarea: taskManager.getTask(taskId) }); // buscamos la tarea por id y abrimos el modal con sus datos
 }
 
 // un boton de agregar al final de cada columna
-document.querySelectorAll(".lista-tareas").forEach((lista) => {// se recorre cada columna
-  const btn = document.createElement("button");// creamos el boton
-  btn.type = "button";// para que no envie nada solo abra el modal
+document.querySelectorAll(".lista-tareas").forEach((lista) => { // se recorre cada columna
+  const btn = document.createElement("button"); // creamos el boton
+  btn.type = "button"; // para que no envie nada solo abra el modal
   btn.className = "btn btn-agregar btn-sm rounded-pill w-100 mt-2";
   btn.textContent = "+ Agregar tarea";
-  btn.addEventListener("click", () => abrirModal({ estado: lista.dataset.estado }));// al dar click se abre el modal con el estado de esa columna
-  lista.after(btn);// se pone justo debajo de la lista de tareas
+  btn.addEventListener("click", () => abrirModal({ estado: lista.dataset.estado })); // al dar click se abre el modal con el estado de esa columna
+  lista.after(btn); // se pone justo debajo de la lista de tareas
 });
 
-// Cambia el estado de una tarea y mueve su tarjeta a la columna correcta.
-// La usan tanto el selector de la tarjeta como el arrastre.
-function moveTask(taskId, newStatus, card) {
-  // 1. Actualizo el estado en el array.
-  taskManager.updateTask(taskId, newStatus);
-  taskManager.guardar();// se guarda el cambio de estado para que no se pierda al refrescar
-  // 2. Actualizo la etiqueta y el selector de la tarjeta.
-  card.querySelector(".badge").textContent = newStatus;
-  card.querySelector(".selector-estado").value = newStatus;
-  // 3. Muevo la tarjeta a la lista de la nueva columna.
-  document
-    .querySelector(`.lista-tareas[data-estado="${newStatus}"]`)
-    .append(card);
-  // 4. Actualizo los contadores.
-  updateCounts(taskManager, currentProjectId);
-}
+// la funcion moveTask se elimino: buscaba .badge y .selector-estado que las tarjetas ya no tienen y nadie la llamaba
 
-form.addEventListener("submit", (event) => {// un envento para guarar tarea 
-  event.preventDefault();
+form.addEventListener("submit", async (event) => { // ahora es async porque espera al servidor
+  event.preventDefault(); // evita que la pagina se recargue
 
-  if (!validateTaskForm()) return;// se condisiona si falla se sale
+  if (!validateTaskForm()) return; // la validacion del front sigue sirviendo para avisar rapido
 
-  const datos = {// los valores del formulario se guardan juntos porque sirven para crear y para editar
+  const datos = { // los valores del formulario sirven para crear y para editar
     nombre: document.getElementById("nombre").value.trim(),
     descripcion: document.getElementById("descripcion").value.trim(),
     asignadoA: document.getElementById("asignadoA").value.trim(),
@@ -92,43 +80,51 @@ form.addEventListener("submit", (event) => {// un envento para guarar tarea
     proyectoId: currentProjectId, // la tarea queda ligada al proyecto abierto
   };
 
-  if (editingId !== null) {// si hay un id es que estamos editando
-    const task = taskManager.editTask(editingId, datos);// se actualizan los datos en el array
-    const oldCard = document.querySelector(`.tarjeta-tarea[data-id="${editingId}"]`);// buscamos la tarjeta vieja en la pantalla
-    const newCard = createTaskCard(task, handleDelete, handleEdit);// creamos la tarjeta nueva con los datos actualizados
-    const lista = document.querySelector(`.lista-tareas[data-estado="${task.estado}"]`);// la lista que le toca por su estado
+  const botonGuardar = modalEl.querySelector('[type="submit"]'); // el boton para bloquearlo mientras se espera
+  botonGuardar.disabled = true; // evita que un doble clic cree la tarea dos veces
 
-    if (oldCard.parentElement === lista) {// si sigue en la misma columna
-      oldCard.replaceWith(newCard);// se cambia en el mismo lugar
-    } else {// si cambio de estado
-      oldCard.remove();// se quita de la columna vieja
-      lista.append(newCard);// y se pasa a la nueva
+  try { // todo lo que habla con el servidor va dentro del try
+    if (editingId !== null) { // si hay un id es que estamos editando
+      const task = await taskManager.editTask(editingId, datos); // PUT y espero la tarea que devuelve el servidor
+      const oldCard = document.querySelector(`.tarjeta-tarea[data-id="${editingId}"]`); // busco la tarjeta vieja en pantalla
+      const newCard = createTaskCard(task, handleDelete, handleEdit); // creo la tarjeta nueva con los datos actualizados
+      const lista = document.querySelector(`.lista-tareas[data-estado="${task.estado}"]`); // la lista que le toca por su estado
+
+      if (oldCard.parentElement === lista) { // si sigue en la misma columna
+        oldCard.replaceWith(newCard); // se cambia en el mismo lugar
+      } else { // si cambio de estado
+        oldCard.remove(); // se quita de la columna vieja
+        lista.append(newCard); // y se pasa a la nueva
+      }
+    } else { // si no, es una tarea nueva
+      const task = await taskManager.addTask(datos); // POST y espero la tarea con su id real
+      const card = createTaskCard(task, handleDelete, handleEdit); // creo la tarjeta
+      document
+        .querySelector(`.lista-tareas[data-estado="${task.estado}"]`)
+        .append(card); // la agrego a la columna de su estado
     }
-  } else {// si no es que es una tarea nueva
-    const task = taskManager.addTask(datos);// para valiar si paso y se crearon con los valores 
 
-    const card = createTaskCard(task, handleDelete, handleEdit);// creammos la tarjeta y paso el delete para el boton eliminar y el edit para el boton editar
-    document// para bucar la lista que coniside con el estado de la tarea y luego agregarla
-      .querySelector(`.lista-tareas[data-estado="${task.estado}"]`)
-      .append(card);
+    updateCounts(taskManager, currentProjectId); // se actualizan los contadores solo si el servidor respondio bien
+    form.reset(); // se resetea el formulario para el proximo uso
+    bootstrap.Modal.getOrCreateInstance(modalEl).hide(); // se cierra el modal
+  } catch (error) { // si el servidor rechazo o esta apagado, el modal queda abierto para corregir
+    const mensajes = error.mensajes ?? [error.message]; // los mensajes que armo api.js
+    if (error.status === 400) showErrors(mensajes); // si es validacion se muestran dentro del formulario
+    else mostrarAlerta(mensajes); // cualquier otro error sale como alerta flotante
+  } finally { // se ejecuta siempre, haya salido bien o mal
+    botonGuardar.disabled = false; // vuelvo a habilitar el boton
   }
-
-  taskManager.guardar();// se guarda despues de crear o editar, y como esta fuera del if/else sirve para los dos casos
-  updateCounts(taskManager, currentProjectId);// se acrualizan los contadores
-  form.reset();// se resetea el formulario para un proximo uso 
-  bootstrap.Modal.getOrCreateInstance(modalEl).hide();// se cierra el modal usando bs
 });
 
-modalEl.addEventListener("hidden.bs.modal", () => {// limpia los errores cada vez que se cierra el modal para poder abrirlo de nuevo
+modalEl.addEventListener("hidden.bs.modal", () => { // limpia los errores cada vez que se cierra el modal para poder abrirlo de nuevo
   clearErrors();
   form.reset();
-  editingId = null;// se olvida la tarea en edicion por si cerraron el modal sin guardar
+  editingId = null; // se olvida la tarea en edicion por si cerraron el modal sin guardar
   modalEl.querySelector(".modal-title").textContent = "Nueva tarea";
   modalEl.querySelector('[type="submit"]').textContent = "Guardar";
 });
 
-
-function renderTasks() { // vuelve a dibujar todas las tarjetas a partir del arreglo
+function renderTasks() { // vuelve a dibujar todas las tarjetas a partir del arreglo local
   document.querySelectorAll(".lista-tareas").forEach((lista) => { // limpio cada columna para no duplicar tarjetas
     lista.innerHTML = "";
   });
@@ -145,18 +141,19 @@ function renderTasks() { // vuelve a dibujar todas las tarjetas a partir del arr
   updateCounts(taskManager, currentProjectId); // actualizo los contadores
 }
 
+const taskContainer = document.getElementById("task-container"); // un solo listener para todo el tablero (delegacion de eventos)
 
-const taskContainer = document.getElementById("task-container");// un solo listener para todo el tablero (delegacion de eventos)
-
-taskContainer.addEventListener("click", (event) => {
-  const doneBtn = event.target.closest(".btn-completar");// closes sube por el DOM hasta encontrar el boton, asi funciona aunque el clic caiga en el icono de adentro
-  if (doneBtn) {// solo me interesa si el clic fue en el boton de completar
-    const taskElement = doneBtn.closest(".tarjeta-tarea");// subo por el DOM hasta la tarjeta que contiene el boton
-    const taskId = Number(taskElement.dataset.id);// el data-id llega como string asi que lo paso a number
-    const task = taskManager.getTask(taskId);// busco la tarea en el arreglo
-    if (task) task.estado = "HECHO";// cambio el estado al valor de completada
-    taskManager.guardar();// se guarda el nuevo estado, sin esto al refrescar vuelve a su columna anterior
-    renderTasks(); // vuelvo a dibujar todo
+taskContainer.addEventListener("click", async (event) => { // ahora es async porque espera al servidor
+  const doneBtn = event.target.closest(".btn-completar"); // closest sube por el DOM hasta el boton aunque el clic caiga en el icono
+  if (doneBtn) { // solo me interesa si el clic fue en completar
+    const taskElement = doneBtn.closest(".tarjeta-tarea"); // subo hasta la tarjeta que contiene el boton
+    const taskId = Number(taskElement.dataset.id); // el data-id llega como texto, lo paso a numero para que coincida con el id de la base
+    try { // el PUT puede fallar
+      await taskManager.updateTask(taskId, "HECHO"); // cambia el estado en el servidor y en la copia local
+      renderTasks(); // vuelvo a dibujar todo
+    } catch (error) { // si fallo, la tarjeta se queda donde estaba
+      mostrarAlerta(error.mensajes ?? [error.message]); // aviso al usuario
+    }
   }
 });
 
@@ -170,19 +167,22 @@ document.querySelectorAll(".columna").forEach((columna) => { // recorre cada col
 
   columna.addEventListener("dragleave", (event) => { // se ejecuta cuando la tarjeta sale de la columna
     if (!columna.contains(event.relatedTarget)) columna.classList.remove("sobre"); // solo quita el resaltado si salio de verdad y no si paso a un elemento hijo
-  }); 
+  });
 
-  columna.addEventListener("drop", (event) => { // se ejecuta cuando sueltas la tarjeta sobre la columna
-    event.preventDefault(); // evita que el navegador haga su accion por defecto con lo que se suelta
+  columna.addEventListener("drop", async (event) => { // se ejecuta al soltar la tarjeta, ahora es async
+    event.preventDefault(); // evita la accion por defecto del navegador
     columna.classList.remove("sobre"); // quita el resaltado
-    const taskId = Number(event.dataTransfer.getData("text/plain")); // lee el id guardado al empezar a arrastrar y lo pasa a numero
-    const task = taskManager.getTask(taskId); // busca la tarea en el arreglo
-    if (!task || task.estado === estado) return; // si no existe o la soltaste en su misma columna no hace nada
-    taskManager.updateTask(taskId, estado); // cambia el estado de la tarea en el arreglo
-    taskManager.guardar(); // guarda en localstorage para que el cambio no se pierda al recargar
-    renderTasks(); // vuelve a dibujar todo para que la tarjeta aparezca en su nueva columna y se actualicen los contadores
-  }); 
-}); 
+    const taskId = Number(event.dataTransfer.getData("text/plain")); // lee el id guardado al arrastrar y lo pasa a numero
+    const task = taskManager.getTask(taskId); // busca la tarea en la copia local
+    if (!task || task.estado === estado) return; // si no existe o se solto en su misma columna no hace nada
+    try { // el PUT puede fallar
+      await taskManager.updateTask(taskId, estado); // guarda el cambio de columna en la base de datos
+      renderTasks(); // redibuja para que la tarjeta aparezca en su nueva columna
+    } catch (error) { // si falla, la tarjeta no se mueve
+      mostrarAlerta(error.mensajes ?? [error.message]); // aviso al usuario
+    }
+  });
+});
 
 const modalProyecto = document.getElementById("modalProyecto"); // el modal de crear proyecto
 
@@ -229,7 +229,7 @@ function renderProyectos() { // dibuja la barra lateral y las tarjetas de la vis
     tarjeta.addEventListener("click", () => abrirProyecto(p.id)); // click en la tarjeta abre el proyecto
     col.append(tarjeta); // la mete en la columna
     grid.append(col); // la agrega a la vista de inicio
-  }); 
+  });
 }
 
 function abrirProyecto(projectId) { // muestra el tablero de un proyecto
@@ -241,31 +241,34 @@ function abrirProyecto(projectId) { // muestra el tablero de un proyecto
   document.getElementById("vista-tablero").classList.remove("d-none"); // muestra el tablero
   renderTasks(); // dibuja solo las tareas de este proyecto
   renderProyectos(); // actualiza cual aparece marcado en la barra
-} 
+}
 
 function mostrarInicio() { // vuelve a la vista principal
   currentProjectId = null; // ya no hay proyecto abierto
   document.getElementById("vista-tablero").classList.add("d-none"); // oculta el tablero
   document.getElementById("vista-inicio").classList.remove("d-none"); // muestra el inicio
   renderProyectos(); // redibuja para actualizar los totales
-} 
+}
 
 let proyectoAEliminar = null; // id del proyecto que se va a eliminar si el usuario confirma
 const modalConfirmar = document.getElementById("modalConfirmar"); // el modal de confirmacion
 
-function eliminarProyecto(projectId) { // ahora solo abre el modal de confirmacion
+function eliminarProyecto(projectId) { // solo abre el modal de confirmacion
   const p = projectManager.getProject(projectId); // busca el proyecto para mostrar su nombre
   proyectoAEliminar = projectId; // recuerda cual se quiere eliminar
   document.getElementById("confirmar-texto").textContent = `Se eliminará "${p.nombre}" con todas sus tareas. Esta acción no se puede deshacer.`; // textContent evita inyectar codigo
   bootstrap.Modal.getOrCreateInstance(modalConfirmar).show(); // abre el modal
 }
 
-document.getElementById("btn-confirmar-eliminar").addEventListener("click", () => { // cuando confirma
+document.getElementById("btn-confirmar-eliminar").addEventListener("click", async () => { // async porque habla con el servidor
   if (proyectoAEliminar === null) return; // si no hay proyecto elegido no hace nada
-  taskManager.deleteTasksByProject(proyectoAEliminar); // borra sus tareas
-  taskManager.guardar(); // guarda el cambio
-  projectManager.deleteProject(proyectoAEliminar); // borra el proyecto
-  projectManager.guardar(); // guarda el cambio
+  try { // borrar puede fallar
+    await taskManager.deleteTasksByProject(proyectoAEliminar); // primero borra sus tareas en la base de datos
+    await projectManager.deleteProject(proyectoAEliminar); // luego borra el proyecto en la base de datos
+  } catch (error) { // si algo fallo, el modal queda abierto
+    mostrarAlerta(error.mensajes ?? [error.message]); // aviso al usuario
+    return; // me salgo sin cerrar nada
+  }
   proyectoAEliminar = null; // ya no hay nada pendiente
   document.activeElement.blur(); // quita el foco para evitar el aviso de aria-hidden
   bootstrap.Modal.getOrCreateInstance(modalConfirmar).hide(); // cierra el modal
@@ -278,33 +281,46 @@ modalConfirmar.addEventListener("hidden.bs.modal", () => { // si cierran el moda
 
 document.getElementById("btn-volver").addEventListener("click", mostrarInicio); // el boton volver lleva al inicio
 
-document.getElementById("project-form").addEventListener("submit", (event) => { // al crear un proyecto
+document.getElementById("project-form").addEventListener("submit", async (event) => { // async porque habla con el servidor
   event.preventDefault(); // evita que la pagina se recargue
+  const formulario = event.target; // guardo el formulario porque despues de un await event.target puede dar problemas
   const nombre = document.getElementById("proyecto-nombre").value.trim(); // lee el nombre sin espacios sobrantes
   const descripcion = document.getElementById("proyecto-descripcion").value.trim(); // lee la descripcion opcional
   const error = document.getElementById("proyecto-error"); // caja de errores
-  if (nombre.length < 3) { // valida el minimo de caracteres
+  if (nombre.length < 3) { // valida el minimo de caracteres antes de molestar al servidor
     error.textContent = "el nombre debe tener minimo 3 caracteres"; // mensaje de error
     error.classList.remove("d-none"); // lo muestra
     return; // se sale sin crear nada
-  } 
-  const project = projectManager.addProject({ nombre, descripcion }); // crea el proyecto
-  projectManager.guardar(); // lo guarda en localstorage
-  event.target.reset(); // deja el formulario vacio
-  error.classList.add("d-none"); // oculta el error
-  document.activeElement.blur(); // quita el foco para evitar el aviso de aria-hidden
-  bootstrap.Modal.getOrCreateInstance(modalProyecto).hide(); // cierra el modal
-  abrirProyecto(project.id); // abre el proyecto recien creado
-}); 
+  }
+  try { // crear puede fallar
+    const project = await projectManager.addProject({ nombre, descripcion }); // POST y espera el proyecto con su id real
+    formulario.reset(); // deja el formulario vacio
+    error.classList.add("d-none"); // oculta el error
+    document.activeElement.blur(); // quita el foco para evitar el aviso de aria-hidden
+    bootstrap.Modal.getOrCreateInstance(modalProyecto).hide(); // cierra el modal
+    abrirProyecto(project.id); // abre el proyecto recien creado
+  } catch (e) { // si el servidor rechazo o esta apagado, el modal queda abierto
+    error.textContent = (e.mensajes ?? [e.message]).join(". "); // muestra los mensajes dentro del modal
+    error.classList.remove("d-none"); // lo muestra
+  }
+});
 
-function iniciar() { // se ejecuta al cargar la pagina
-  if (projectManager.getAllProjects().length === 0 && taskManager.getAllTasks().length > 0) { // si hay tareas viejas y ningun proyecto
-    const p = projectManager.addProject({ nombre: "Mi primer proyecto" }); // crea un proyecto para guardarlas
-    taskManager.getAllTasks().forEach((t) => { t.proyectoId = p.id; }); // le asigna ese proyecto a cada tarea vieja
-    projectManager.guardar(); // guarda el proyecto
-    taskManager.guardar(); // guarda las tareas actualizadas
-  } 
+async function iniciar() { // se ejecuta al cargar la pagina
+  try { // si el backend esta apagado no se debe romper la pagina
+    await Promise.all([taskManager.cargar(), projectManager.cargar()]); // pide tareas y proyectos a la vez y espera a que lleguen los dos
+  } catch (error) { // backend apagado o error del servidor
+    mostrarAlerta(error.mensajes ?? [error.message]); // aviso al usuario
+  }
   mostrarInicio(); // arranca en la vista principal
-} 
+}
+
+const sidebar = document.getElementById("sidebar"); // la barra lateral
+const btnSidebar = document.getElementById("btn-sidebar"); // el boton que la esconde y la muestra
+
+btnSidebar.addEventListener("click", () => { // cada clic alterna entre esconder y mostrar
+  const colapsada = sidebar.classList.toggle("colapsada"); // toggle pone la clase si no esta y la quita si esta, y devuelve true si quedo puesta
+  btnSidebar.setAttribute("aria-expanded", String(!colapsada)); // avisa a los lectores de pantalla si la barra esta abierta
+  btnSidebar.title = colapsada ? "Mostrar barra lateral" : "Ocultar barra lateral"; // el texto al pasar el mouse cambia segun el estado
+});
 
 iniciar(); // llama a iniciar cuando ya existe todo lo anterior
