@@ -14,13 +14,18 @@
 
   <div class="d-flex layout">
 
-    <aside class="sidebar p-3"> <!-- barra lateral con los proyectos -->
-      <h2 class="h6 fw-medium mb-3">Proyectos</h2>
-      <button type="button" class="btn btn-guardar rounded-pill w-100 mb-3" data-bs-toggle="modal" data-bs-target="#modalProyecto">+ Nuevo proyecto</button>
-      <ul id="lista-proyectos" class="list-unstyled d-grid gap-1 mb-0"></ul>
+        <aside class="sidebar p-3" id="sidebar"> <!-- barra lateral con los proyectos, el id sirve para encontrarla desde js -->
+      <div class="sidebar-contenido"> <!-- envoltorio con ancho fijo para que el contenido no se aplaste al encoger la barra -->
+        <h2 class="h6 fw-medium mb-3">Proyectos</h2>
+        <button type="button" class="btn btn-guardar rounded-pill w-100 mb-3" data-bs-toggle="modal" data-bs-target="#modalProyecto">+ Nuevo proyecto</button>
+        <ul id="lista-proyectos" class="list-unstyled d-grid gap-1 mb-0"></ul>
+      </div>
     </aside>
 
     <main class="container-xl py-4 flex-grow-1">
+       <button type="button" id="btn-sidebar" class="btn btn-cancelar btn-sm rounded-pill mb-3" aria-controls="sidebar" aria-expanded="true" title="Ocultar barra lateral"> <!-- aria-controls y aria-expanded le dicen a los lectores de pantalla que abre o cierra la barra -->
+        <i class="bi bi-layout-sidebar"></i> <!-- icono de bootstrap icons que ya tienes cargado -->
+      </button>
 
       <section id="vista-inicio"> <!-- vista principal -->
         <h1 class="h3 fw-medium mb-1">Tasking</h1>

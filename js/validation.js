@@ -5,7 +5,7 @@ export function clearErrors() {// una funcion par ocultar u vaciar la variable d
   errorsBox.innerHTML = "";//aca borramos mensajes anteriores 
 }
 
-function showErrors(errors) {// una funcion que muestra la lista de los errores 
+export function showErrors(errors) {// ahora con export para poder usarla desde main.js cuando el servidor rechaza el formulario
   errorsBox.innerHTML = "<ul class='mb-0'>" +// combierto los errores en un listado 
     errors.map((e) => `<li>${e}</li>`).join("") +// y pasan a unorden list creo que asi se llama 
     "</ul>";

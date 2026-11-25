@@ -329,6 +329,23 @@ body {
   }
 }
 
+
+.sidebar {
+  transition: width 0.3s ease, padding 0.3s ease, border-color 0.3s ease, visibility 0.3s; /* anima el ancho para que se deslice en vez de desaparecer de golpe */
+}
+
+.sidebar-contenido { min-width: 208px; } /* 240px de la barra menos 32px de padding, mantiene el contenido con su tamaño normal mientras se encoge */
+
+.sidebar.colapsada {
+  width: 0; /* la barra se encoge hasta desaparecer */
+  padding: 0 !important; /* el p-3 de bootstrap es important, por eso aqui tambien lo necesito */
+  border-right-color: transparent; /* quita la linea del borde para que no quede una raya */
+  visibility: hidden; /* evita que con Tab se pueda llegar a botones que no se ven */
+}
+
+@media (max-width: 768px) {
+  .sidebar.colapsada { display: none; } /* en celular la barra va arriba, aqui simplemente se oculta sin animacion */
+}
 /* ---------- alertas y avisos con la paleta de la pagina ---------- */
 .alert-danger {
   --bs-alert-color: var(--c-100);
